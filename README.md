@@ -54,7 +54,9 @@ Chose OpenCV/JavaCV for:
 
 - [x] Project structure setup
 - [x] Dependency configuration
-- [ ] Camera integration
-- [ ] ASCII conversion algorithm
-- [ ] Terminal rendering
+- [x] Camera integration
+- [x] ASCII conversion algorithm
+- [x] Terminal rendering
+- [ ] Keyboard controls
+- [ ] Additional adjustments and feature sets for terminal display (color, saves, alternative character sets)
 
