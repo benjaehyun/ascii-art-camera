@@ -1,0 +1,23 @@
+{
+    "camera": {
+      "deviceId": 0,
+      "width": 640,
+      "height": 480,
+      "fps": 30
+    },
+    "display": {
+      "terminalWidth": 80,
+      "terminalHeight": 24,
+      "characterSet": "simple",
+      "useAnsiCodes": true
+    },
+    "processing": {
+      "contrast": 1.0,
+      "brightness": 0,
+      "edgeDetection": false
+    },
+    "performance": {
+      "targetFps": 15,
+      "frameBufferSize": 3
+    }
+  }
