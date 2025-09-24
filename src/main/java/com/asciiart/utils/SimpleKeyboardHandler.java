@@ -5,6 +5,7 @@ import com.asciiart.processor.ASCIIConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -122,18 +123,22 @@ public class SimpleKeyboardHandler implements Runnable {
                 message = "Character set changed";
                 break;
             case '1':
+                clearInputBuffer();
                 imageProcessor.setTargetDimensions(40, 15);
                 message = "Low resolution (40x15)";
                 break;
             case '2':
+                clearInputBuffer();
                 imageProcessor.setTargetDimensions(80, 24);
                 message = "Medium resolution (80x24)";
                 break;
             case '3':
+                clearInputBuffer();
                 imageProcessor.setTargetDimensions(120, 40);
                 message = "High resolution (120x40)";
                 break;
             case '4':
+                clearInputBuffer();
                 imageProcessor.setTargetDimensions(160, 50);
                 message = "Ultra resolution (160x50)";
                 break;
@@ -160,6 +165,20 @@ public class SimpleKeyboardHandler implements Runnable {
         
         if (!message.isEmpty()) {
             setMessage(message);
+        }
+    }
+    
+    /**
+     * Clear the input buffer to prevent command overlap
+     */
+    private void clearInputBuffer() {
+        commandQueue.clear();
+        try {
+            while (System.in.available() > 0) {
+                System.in.read();
+            }
+        } catch (IOException e) {
+            // Ignore
         }
     }
     
