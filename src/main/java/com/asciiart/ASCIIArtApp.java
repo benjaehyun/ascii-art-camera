@@ -56,13 +56,17 @@ public class ASCIIArtApp {
         logger.info("Starting ASCII Art Camera...");
         running.set(true);
         
+        // Clear screen first
+        terminalRenderer.clear();
+        
         // Print instructions
-        System.out.println("\n=== CONTROLS (type letter + Enter) ===");
+        System.out.println("=== CONTROLS (type letter + Enter) ===");
         System.out.println("  +/- : Contrast     [/] : Brightness");
         System.out.println("  c   : Charset      1-4 : Resolution");
         System.out.println("  s   : Save frame   r   : Reset");
         System.out.println("  q   : Quit         h   : Help");
-        System.out.println("=====================================\n");
+        System.out.println("=======================================");
+        System.out.println("\nStarting in 2 seconds...\n");
         
         // Start keyboard handler
         keyboardHandler.start();
@@ -70,14 +74,14 @@ public class ASCIIArtApp {
         // Add shutdown hook for cleanup
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         
-        // Wait a moment for user to see instructions
+        // Wait for user to see instructions
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             // Ignore
         }
         
-        // Clear screen initially
+        // Clear screen completely before starting rendering
         terminalRenderer.clear();
         
         // Main processing loop
@@ -85,6 +89,8 @@ public class ASCIIArtApp {
         int frameCount = 0;
         long startTime = System.currentTimeMillis();
         String currentAsciiArt = "";
+        int lastWidth = 0;
+        int lastHeight = 0;
         
         while (running.get()) {
             try {
@@ -98,6 +104,16 @@ public class ASCIIArtApp {
                     int[][] grayValues = imageProcessor.processFrame(frame);
                     
                     if (grayValues != null) {
+                        // Check if resolution changed
+                        boolean resolutionChanged = (grayValues[0].length != lastWidth || 
+                                                    grayValues.length != lastHeight);
+                        if (resolutionChanged) {
+                            // Clear screen completely on resolution change
+                            terminalRenderer.clear();
+                            lastWidth = grayValues[0].length;
+                            lastHeight = grayValues.length;
+                        }
+                        
                         // Convert to ASCII
                         currentAsciiArt = asciiConverter.convertToAscii(grayValues);
                         
