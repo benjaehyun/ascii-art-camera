@@ -95,7 +95,8 @@ public class TerminalRenderer {
         if (useAnsiCodes) {
             System.out.print(SHOW_CURSOR);
             System.out.print(RESET);
-            clear();
+            System.out.print(CLEAR_SCREEN);
+            System.out.flush();
         }
         logger.debug("Terminal cleanup complete. Rendered {} frames", frameCount);
     }

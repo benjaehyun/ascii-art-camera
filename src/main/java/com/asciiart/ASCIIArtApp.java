@@ -4,9 +4,12 @@ import com.asciiart.camera.CameraManager;
 import com.asciiart.processor.ImageProcessor;
 import com.asciiart.processor.ASCIIConverter;
 import com.asciiart.display.TerminalRenderer;
+import com.asciiart.utils.SimpleKeyboardHandler;
+import com.asciiart.utils.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Main entry point for ASCII Art Camera application
@@ -18,7 +21,8 @@ public class ASCIIArtApp {
     private ImageProcessor imageProcessor;
     private ASCIIConverter asciiConverter;
     private TerminalRenderer terminalRenderer;
-    private volatile boolean running = false;
+    private SimpleKeyboardHandler keyboardHandler;
+    private AtomicBoolean running = new AtomicBoolean(false);
     
     public ASCIIArtApp() {
         logger.info("Initializing ASCII Art Camera...");
@@ -38,6 +42,9 @@ public class ASCIIArtApp {
                 System.exit(1);
             }
             
+            // Initialize keyboard handler
+            keyboardHandler = new SimpleKeyboardHandler(imageProcessor, asciiConverter, running);
+            
             logger.info("Successfully initialized all components");
         } catch (Exception e) {
             logger.error("Failed to initialize application", e);
@@ -47,10 +54,28 @@ public class ASCIIArtApp {
     
     public void start() {
         logger.info("Starting ASCII Art Camera...");
-        running = true;
+        running.set(true);
+        
+        // Print instructions
+        System.out.println("\n=== CONTROLS (type letter + Enter) ===");
+        System.out.println("  +/- : Contrast     [/] : Brightness");
+        System.out.println("  c   : Charset      1-4 : Resolution");
+        System.out.println("  s   : Save frame   r   : Reset");
+        System.out.println("  q   : Quit         h   : Help");
+        System.out.println("=====================================\n");
+        
+        // Start keyboard handler
+        keyboardHandler.start();
         
         // Add shutdown hook for cleanup
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        
+        // Wait a moment for user to see instructions
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // Ignore
+        }
         
         // Clear screen initially
         terminalRenderer.clear();
@@ -59,8 +84,9 @@ public class ASCIIArtApp {
         long frameTime = 1000 / 15; // Target 15 FPS
         int frameCount = 0;
         long startTime = System.currentTimeMillis();
+        String currentAsciiArt = "";
         
-        while (running) {
+        while (running.get()) {
             try {
                 long frameStart = System.currentTimeMillis();
                 
@@ -73,18 +99,36 @@ public class ASCIIArtApp {
                     
                     if (grayValues != null) {
                         // Convert to ASCII
-                        String asciiArt = asciiConverter.convertToAscii(grayValues);
+                        currentAsciiArt = asciiConverter.convertToAscii(grayValues);
+                        
+                        // Check if we should save this frame
+                        if (keyboardHandler.shouldSaveFrame()) {
+                            FileUtils.saveAsciiArtWithMetadata(
+                                currentAsciiArt,
+                                asciiConverter.getCurrentCharset(),
+                                imageProcessor.getContrast(),
+                                imageProcessor.getBrightness(),
+                                grayValues[0].length,
+                                grayValues.length
+                            );
+                        }
                         
                         // Render to terminal
-                        terminalRenderer.render(asciiArt);
+                        terminalRenderer.render(currentAsciiArt);
                         
                         // Add status line
                         frameCount++;
-                        if (frameCount % 30 == 0) { // Update status every 30 frames
-                            double fps = frameCount / ((System.currentTimeMillis() - startTime) / 1000.0);
-                            String status = String.format("FPS: %.1f | Frame: %d | Press Ctrl+C to exit", fps, frameCount);
-                            terminalRenderer.renderStatus(status);
+                        double fps = frameCount / ((System.currentTimeMillis() - startTime) / 1000.0);
+                        
+                        // Get any status message from keyboard handler
+                        String statusMsg = keyboardHandler.getStatusMessage();
+                        String status;
+                        if (!statusMsg.isEmpty()) {
+                            status = ">>> " + statusMsg + " | FPS: " + String.format("%.1f", fps);
+                        } else {
+                            status = String.format("FPS: %.1f | Commands: +/- [/] c 1-4 s r q h", fps);
                         }
+                        terminalRenderer.renderStatus(status);
                     }
                     
                     // Clean up the frame
@@ -110,7 +154,11 @@ public class ASCIIArtApp {
     
     public void shutdown() {
         logger.info("Shutting down ASCII Art Camera...");
-        running = false;
+        running.set(false);
+        
+        if (keyboardHandler != null) {
+            keyboardHandler.stop();
+        }
         
         if (terminalRenderer != null) {
             terminalRenderer.cleanup();

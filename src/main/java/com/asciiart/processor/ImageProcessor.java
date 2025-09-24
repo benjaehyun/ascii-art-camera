@@ -54,7 +54,7 @@ public class ImageProcessor {
         // Use fully qualified OpenCV resize function to avoid naming conflict
         org.bytedeco.opencv.global.opencv_imgproc.resize(image, resized, size, 0, 0, INTER_LINEAR);
         
-        logger.debug("Image resized to {}x{}", width, height);
+        // logger.debug("Image resized to {}x{}", width, height); // Commented out for cleaner display
         return resized;
     }
     
@@ -148,5 +148,13 @@ public class ImageProcessor {
     public void adjustBrightness(int delta) {
         this.brightness = Math.max(-100, Math.min(100, brightness + delta));
         logger.info("Brightness adjusted to {}", brightness);
+    }
+    
+    public double getContrast() {
+        return contrast;
+    }
+    
+    public int getBrightness() {
+        return brightness;
     }
 }
