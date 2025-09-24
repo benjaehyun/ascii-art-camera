@@ -57,6 +57,7 @@ Chose OpenCV/JavaCV for:
 - [x] Camera integration
 - [x] ASCII conversion algorithm
 - [x] Terminal rendering
-- [ ] Keyboard controls
+- [x] Keyboard controls
+- [x] Clean up terminal instructions and resolution updates
 - [ ] Additional adjustments and feature sets for terminal display (color, saves, alternative character sets)
 
