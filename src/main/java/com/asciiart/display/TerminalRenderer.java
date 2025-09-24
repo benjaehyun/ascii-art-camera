@@ -43,7 +43,10 @@ public class TerminalRenderer {
      */
     public void clear() {
         if (useAnsiCodes) {
-            System.out.print(CLEAR_SCREEN);
+            // Clear screen and scrollback buffer
+            System.out.print("\033[2J");     // Clear screen
+            System.out.print("\033[3J");     // Clear scrollback
+            System.out.print("\033[H");      // Move cursor home
             System.out.flush();
         } else {
             // Fallback for non-ANSI terminals
@@ -62,8 +65,9 @@ public class TerminalRenderer {
         }
         
         if (useAnsiCodes) {
-            // Move cursor home and render
-            System.out.print(CURSOR_HOME);
+            // Clear entire screen first for clean rendering
+            System.out.print("\033[2J");   // Clear screen
+            System.out.print("\033[H");    // Move cursor home
         }
         
         System.out.print(asciiArt);
